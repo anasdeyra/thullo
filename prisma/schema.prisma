@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mongodb"
   // NOTE: When using postgresql, mysql or sqlserver, uncomment the @db.Text annotations in model Account below
   // Further reading:
   // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
@@ -14,15 +14,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Example {
-  id        String   @id @default(cuid())
+model Board {
+  id        String   @id @default(uuid()) @map("_id")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  coverPhoto String
+  title String 
+  isPrivate Boolean @default(true)
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  members BoardMembership[] 
+  labels label[]
+  rows Row[]
+  description String? @db.String
+  adminId            String 
+  @@unique([id, adminId])
 }
+
+
+model BoardMembership{
+id        String   @id @default(uuid()) @map("_id")
+
+  memeber User @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId String 
+  board Board @relation(fields: [boardId],references: [id], onDelete: Cascade)
+  boardId String
+  @@unique([memberId,boardId])
+  
+}
+
+
+model Row {
+  id String @id @default(uuid()) @map("_id")
+  order Int
+  cards Card[]
+  board Board @relation(fields: [boardId],references: [id], onDelete: Cascade)
+  boardId String @unique
+}
+
+model Card {
+  id        String   @id @default(uuid()) @map("_id")
+  title String
+  description String? @db.String
+  author User @relation(fields: [authorId], references: [id],onDelete: Cascade)
+  authorId String
+  row Row @relation(fields: [rowId],references: [id],onDelete: Cascade)
+  rowId String @unique
+  cover String?
+  comments Comment[]
+}
+
+model Comment {
+  id String @id @default(uuid()) @map("_id")
+body String
+comentor User @relation(fields: [comentorId],references: [id],onDelete: Cascade)
+comentorId String
+card Card @relation(fields: [cardId], references: [id],onDelete: Cascade)
+cardId String
+}
+
 
 // Necessary for Next auth
 model Account {
-  id                String  @id @default(cuid())
+  id                String  @id @default(cuid()) @map("_id")
   userId            String
   type              String
   provider          String
@@ -40,7 +93,7 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -48,17 +101,26 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id @default(cuid()) @map("_id")
   name          String?
   email         String?   @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
+  Boards Board[] @relation()
+  boards BoardMembership[]
+  cards Card[]
+  comments Comment[]
+}
+
+type label {
+  text String
+  color String
 }
 
 model VerificationToken {
-  identifier String
+  identifier String @id @map("_id")
   token      String   @unique
   expires    DateTime
 

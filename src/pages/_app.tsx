@@ -8,6 +8,7 @@ import { MantineProvider, Global } from "@mantine/core";
 import Head from "next/head";
 import AppShell from "../components/AppShell/AppShell";
 import theme from "../utils/theme";
+import { BoardProvider } from "../utils/boardConext";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -34,9 +35,11 @@ const MyApp: AppType<{ session: Session | null }> = ({
           ]}
         />
         <MantineProvider withGlobalStyles withNormalizeCSS theme={theme}>
-          <AppShell>
-            <Component {...pageProps} />
-          </AppShell>
+          <BoardProvider>
+            <AppShell>
+              <Component {...pageProps} />
+            </AppShell>
+          </BoardProvider>
         </MantineProvider>
       </SessionProvider>
     </>

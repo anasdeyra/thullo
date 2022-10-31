@@ -9,12 +9,26 @@ import {
   Divider,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import React, { useRef } from "react";
+import { useRouter } from "next/router";
 import { MdLock, MdMoreHoriz as MdDots, MdAdd } from "react-icons/md";
 import Card from "../../components/Card/Card";
+import { trpc } from "../../utils/trpc";
+import { useEffect, useContext } from "react";
+import { boardContext } from "../../utils/boardConext";
 
 export default function board() {
+  const { query } = useRouter();
   const [opened, { close, open }] = useDisclosure(false);
+  const boardQuery = trpc.board.getBoard.useQuery({ id: query.id });
+  const { boardName, setBoardName } = useContext(boardContext);
+  useEffect(() => {
+    boardQuery.data?.title && setBoardName(boardQuery.data.title);
+
+    return () => {
+      setBoardName(null);
+    };
+  }, [boardQuery]);
+
   return (
     <Stack sx={{ minHeight: "100%" }}>
       {opened && (
